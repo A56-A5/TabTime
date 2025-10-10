@@ -1,4 +1,3 @@
-//popup.js
 const SITE_NAME_MAP = {
   "youtube.com": "YouTube",
   "mail.google.com": "Gmail",

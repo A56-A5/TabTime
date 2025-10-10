@@ -1,6 +1,6 @@
-# Web Time Tracker (Chrome Extension)
+# TabTime (Extension)
 
-A minimal Chrome extension that tracks how much time you spend on websites and shows it in a clean popup.
+A minimal extension that tracks how much time you spend on websites and shows it in a clean popup.
 
 ---
 
@@ -10,7 +10,7 @@ A minimal Chrome extension that tracks how much time you spend on websites and s
 
 ![Popup Screenshot](images/ex1.png)
 
-## 🚀 Features
+##  Features
 
 * Tracks time per website in real-time
 * Auto-resets daily at midnight
@@ -19,7 +19,7 @@ A minimal Chrome extension that tracks how much time you spend on websites and s
 
 ---
 
-## ⚙️ Installation
+##  Installation
 
 1. Open Chrome → `chrome://extensions`
 2. Turn on **Developer mode**
@@ -28,7 +28,7 @@ A minimal Chrome extension that tracks how much time you spend on websites and s
 
 ---
 
-## 🧩 Usage
+##  Usage
 
 * Open the popup to see time spent per site
 * Click **Reset** to clear data
