@@ -2,9 +2,7 @@
 
 A minimal extension that tracks how much time you spend on websites and shows it in a clean popup.
 
----
-
-## 📷 Example
+## Example
 
 **Popup UI:**
 
