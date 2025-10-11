@@ -32,7 +32,17 @@ async function setActiveTab(tabId) {
     const tab = await chrome.tabs.get(tabId);
     if (tab.url) {
       const url = new URL(tab.url);
-      const hostname = url.hostname.replace(/^www\./, ""); 
+      const hostname = url.hostname.replace(/^www\./, "");
+
+      const ignoreList = [
+        "chrome", "opera", "brave", "edge", "vivaldi",
+        "about", "startpage", "settings", "extensions", "newtab"
+      ];
+      if (ignoreList.some(k => hostname.toLowerCase().includes(k))) {
+        activeDomain = null;
+        return;
+      }
+
       activeDomain = hostname;
       activeTabId = tabId;
       startTime = Date.now();
@@ -45,11 +55,22 @@ async function setActiveTab(tabId) {
 
 chrome.tabs.onActivated.addListener((info) => setActiveTab(info.tabId));
 
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (tabId === activeTabId && changeInfo.url) {
-    setActiveTab(tabId);
+    await updateTime();
+    try {
+      const url = new URL(changeInfo.url);
+      const hostname = url.hostname.replace(/^www\./, "");
+      if (hostname !== activeDomain) {
+        activeDomain = hostname;
+        startTime = Date.now();
+      }
+    } catch {
+      activeDomain = null;
+    }
   }
 });
+
 
 chrome.windows.onFocusChanged.addListener(async (windowId) => {
   if (windowId === chrome.windows.WINDOW_ID_NONE) {
