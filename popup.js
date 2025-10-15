@@ -23,12 +23,9 @@ const SITE_NAME_MAP = {
   "zoom.us": "Zoom",
   "meet.google.com": "Google Meet",
   "monkeytype.com": "Monkeytype",
-  "github.com": "GitHub",
   "leetcode.com": "LeetCode",
-  "instagram.com": "Instagram",
   "hianime.to": "Anime",
-  "newtab": "AFK",
-  "in.pinterest.com": "Pinterest",
+  "in.pinterest.com": "Pinterest"
 };
 
 function formatTime(ms) {
@@ -39,12 +36,15 @@ function formatTime(ms) {
   return `${h}h ${m}m ${sec}s`;
 }
 
+/* -------------------- Per-site list -------------------- */
 function loadTimeData() {
   chrome.storage.local.get({ timeData: {} }, (data) => {
     const list = document.getElementById("time-list");
     list.innerHTML = "";
-    const entries = Object.entries(data.timeData);
+    const todayStr = new Date().toISOString().slice(0,10);
+    const todayData = data.timeData[todayStr] || {};
 
+    const entries = Object.entries(todayData);
     if (!entries.length) {
       list.innerHTML = "<p>No data yet</p>";
       return;
@@ -57,6 +57,7 @@ function loadTimeData() {
       total += ms;
       const friendlyName = SITE_NAME_MAP[site] || site; 
       const div = document.createElement("div");
+      div.className = "site-item";
       div.textContent = `${friendlyName}: ${formatTime(ms)}`;
       list.appendChild(div);
     }
@@ -68,6 +69,69 @@ function loadTimeData() {
 
 setInterval(loadTimeData, 1000);
 
+/* -------------------- Reset -------------------- */
 document.getElementById("reset-btn").addEventListener("click", () => {
   chrome.storage.local.set({ timeData: {} }, loadTimeData);
 });
+
+/* -------------------- Tabs -------------------- */
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    const tab = btn.dataset.tab;
+    document.getElementById("list-tab").style.display = tab === "list" ? "block" : "none";
+    document.getElementById("chart-tab").style.display = tab === "chart" ? "block" : "none";
+
+    if (tab === "chart") loadWeeklyChart();
+  });
+});
+
+/* -------------------- Weekly Chart -------------------- */
+async function loadWeeklyChart() {
+  const data = await chrome.storage.local.get("timeData");
+  const timeData = data.timeData || {};
+  const days = [];
+  const siteTotals = {};
+
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    const dStr = date.toISOString().slice(0, 10);
+    days.push(dStr);
+
+    const dayData = timeData[dStr] || {};
+    for (const [site, ms] of Object.entries(dayData)) {
+      siteTotals[site] = (siteTotals[site] || 0) + ms;
+    }
+  }
+
+  const topSites = Object.entries(siteTotals)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([site]) => site);
+
+  const datasets = topSites.map(site => ({
+    label: SITE_NAME_MAP[site] || site,
+    data: days.map(d => (timeData[d]?.[site] || 0) / 1000 / 60), // minutes
+    borderColor: '#' + Math.floor(Math.random()*16777215).toString(16),
+    fill: false
+  }));
+
+  const ctx = document.getElementById('weekly-chart').getContext('2d');
+  if (window.weeklyChart) window.weeklyChart.destroy();
+
+  window.weeklyChart = new Chart(ctx, {
+    type: 'line',
+    data: { labels: days, datasets },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'bottom' } },
+      scales: {
+        y: { title: { display: true, text: 'Minutes' } },
+        x: { title: { display: true, text: 'Date' } }
+      }
+    }
+  });
+}

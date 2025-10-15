@@ -6,21 +6,16 @@ async function updateTime() {
   if (!activeDomain) return;
 
   const now = Date.now();
-  const today = new Date().setHours(0, 0, 0, 0);
-  const stored = await chrome.storage.local.get(["timeData", "lastReset"]);
-  const lastReset = stored.lastReset || 0;
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const stored = await chrome.storage.local.get(["timeData"]);
+  const timeData = stored.timeData || {};
 
-  if (today > lastReset) {
-    await chrome.storage.local.set({ timeData: {}, lastReset: today });
-    startTime = now;
-    return;
-  }
+  if (!timeData[todayStr]) timeData[todayStr] = {};
 
   const elapsed = now - startTime;
-  const timeData = stored.timeData || {};
-  timeData[activeDomain] = (timeData[activeDomain] || 0) + elapsed;
-  await chrome.storage.local.set({ timeData });
+  timeData[todayStr][activeDomain] = (timeData[todayStr][activeDomain] || 0) + elapsed;
 
+  await chrome.storage.local.set({ timeData });
   startTime = now;
 }
 
@@ -71,7 +66,6 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   }
 });
 
-
 chrome.windows.onFocusChanged.addListener(async (windowId) => {
   if (windowId === chrome.windows.WINDOW_ID_NONE) {
     await updateTime();
@@ -89,7 +83,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 });
 
 (async () => {
-  const today = new Date().setHours(0, 0, 0, 0);
-  const data = await chrome.storage.local.get("lastReset");
-  if ((data.lastReset || 0) < today) await chrome.storage.local.set({ timeData: {}, lastReset: today });
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const data = await chrome.storage.local.get("timeData");
+  if (!data.timeData) await chrome.storage.local.set({ timeData: {} });
 })();

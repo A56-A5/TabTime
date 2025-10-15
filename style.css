@@ -39,3 +39,28 @@ button {
 button:hover {
   background: #0077ff;
 }
+
+.tabs {
+  display: flex;
+  margin-bottom: 8px;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 6px 0;
+  background: #1e1e1e;
+  border: 1px solid #333;
+  color: #e0e0e0;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.tab-btn.active {
+  background: #1e90ff;
+  color: white;
+  border-bottom: none;
+}
+
+.tab-content {
+  display: block;
+}
