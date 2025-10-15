@@ -36,15 +36,13 @@ function formatTime(ms) {
   return `${h}h ${m}m ${sec}s`;
 }
 
-/* -------------------- Per-site list -------------------- */
 function loadTimeData() {
   chrome.storage.local.get({ timeData: {} }, (data) => {
     const list = document.getElementById("time-list");
     list.innerHTML = "";
-    const todayStr = new Date().toISOString().slice(0,10);
-    const todayData = data.timeData[todayStr] || {};
+    const timeData = data.timeData || {};
 
-    const entries = Object.entries(todayData);
+    const entries = Object.entries(timeData);
     if (!entries.length) {
       list.innerHTML = "<p>No data yet</p>";
       return;
@@ -69,12 +67,10 @@ function loadTimeData() {
 
 setInterval(loadTimeData, 1000);
 
-/* -------------------- Reset -------------------- */
 document.getElementById("reset-btn").addEventListener("click", () => {
-  chrome.storage.local.set({ timeData: {} }, loadTimeData);
+  chrome.storage.local.set({ timeData: {}, timeDataByDate: {} }, loadTimeData);
 });
 
-/* -------------------- Tabs -------------------- */
 document.querySelectorAll(".tab-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -88,10 +84,9 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
   });
 });
 
-/* -------------------- Weekly Chart -------------------- */
 async function loadWeeklyChart() {
-  const data = await chrome.storage.local.get("timeData");
-  const timeData = data.timeData || {};
+  const data = await chrome.storage.local.get("timeDataByDate");
+  const timeData = data.timeDataByDate || {};
   const days = [];
   const siteTotals = {};
 
@@ -114,7 +109,7 @@ async function loadWeeklyChart() {
 
   const datasets = topSites.map(site => ({
     label: SITE_NAME_MAP[site] || site,
-    data: days.map(d => (timeData[d]?.[site] || 0) / 1000 / 60), // minutes
+    data: days.map(d => (timeData[d]?.[site] || 0) / 1000 / 60), 
     borderColor: '#' + Math.floor(Math.random()*16777215).toString(16),
     fill: false
   }));
